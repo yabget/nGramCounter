@@ -2,9 +2,13 @@
  * Created by ydubale on 2/22/15.
  */
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.input.KeyValueLineRecordReader;
 import org.apache.hadoop.mapreduce.lib.input.LineRecordReader;
@@ -49,6 +53,30 @@ public class NGramCounter {
 
         public Text getCurrentValue(){
             return this.value;
+        }
+    }
+
+    /**
+     * Creates and returns a FileNameKeyRecordReader, Job is not splitable
+     */
+    public static class FileNameKeyInputFormat extends FileInputFormat<Text, Text> {
+
+        public FileNameKeyInputFormat(){
+            super();
+        }
+
+        @Override
+        protected boolean isSplitable(JobContext context, Path filename){
+            return false;
+        }
+
+        @Override
+        public RecordReader<Text, Text> createRecordReader(
+                InputSplit inputSplit, TaskAttemptContext taskAttemptContext
+        ) throws IOException, InterruptedException {
+
+            taskAttemptContext.setStatus(inputSplit.toString());
+            return new FileNameKeyRecordReader(taskAttemptContext.getConfiguration(), (FileSplit) inputSplit);
         }
     }
 
